@@ -50,16 +50,6 @@ services:
       - LOKI_INTERNAL_URL=http://loki:3100
       - PROMETHEUS_INTERNAL_URL=http://prometheus:9090
       - TEMPO_INTERNAL_URL=http://tempo:3200
-  
-  example_api: 
-    build:
-      context: ./examples/api
-      dockerfile: dockerfile
-    ports:
-      - "9091:9091"
-    environment:
-      - TEMPO_URL=http://tempo:4318
-      - TEMPO_SERVICE_NAME=example_api
 
 volumes: 
   prometheus_data:
