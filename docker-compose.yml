@@ -6,17 +6,23 @@ services:
     build:
       context: ./prometheus
       dockerfile: dockerfile
-    user: root # required for data persistence
+      args:
+        VERSION: latest
+    user: root
     ports:
       - "9090:9090"
     volumes:
       - prometheus_data:/prometheus
+    environment:
+      - ZENITH_API_TARGET=${ZENITH_API_TARGET:-host.docker.internal:8000}
 
   loki:
     build:
       context: ./loki
       dockerfile: dockerfile
-    user: root # required for data persistence
+      args:
+        VERSION: latest
+    user: root
     ports:
       - "3100:3100"
     volumes:
@@ -26,11 +32,13 @@ services:
     build:
       context: ./tempo
       dockerfile: dockerfile
-    user: root # required for data persistence
+      args:
+        VERSION: latest
+    user: root
     ports:
-      - "3200:3200" # http server for querying
-      - "4317:4317" # grpc server for ingest
-      - "4318:4318" # http server for ingest
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
     volumes:
       - tempo_data:/var/tempo
 
@@ -38,6 +46,8 @@ services:
     build:
       context: ./grafana
       dockerfile: dockerfile
+      args:
+        VERSION: latest
     ports:
       - "3000:3000"
     volumes:
