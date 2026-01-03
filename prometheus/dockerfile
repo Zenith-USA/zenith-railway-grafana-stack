@@ -1,9 +1,13 @@
-ARG VERSION=v3.2.1
+# Force rebuild
+ARG VERSION=latest
 
 FROM prom/prometheus:${VERSION}
 
-# Copy the prom.yml configuration file to the container
-COPY prom.yml /etc/prometheus/prom.yml
+COPY prom.yml /etc/prometheus/prom.yml.tpl
+COPY replace_env.sh /usr/local/bin/replace_env.sh
 
-# Command to run Prometheus
-CMD ["--config.file=/etc/prometheus/prom.yml", "--storage.tsdb.path=/prometheus"]
+USER root
+RUN chmod +x /usr/local/bin/replace_env.sh
+
+ENTRYPOINT []
+CMD ["/bin/sh", "-c", "/usr/local/bin/replace_env.sh /etc/prometheus/prom.yml.tpl /etc/prometheus/prom.yml && prometheus --config.file=/etc/prometheus/prom.yml --storage.tsdb.path=/prometheus"]
