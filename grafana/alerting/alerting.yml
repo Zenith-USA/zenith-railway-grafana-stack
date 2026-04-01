@@ -1,0 +1,348 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: PagerDuty
+    receivers:
+      - uid: pagerduty
+        type: pagerduty
+        settings:
+          integrationKey: $PAGERDUTY_INTEGRATION_KEY
+          severity: "{{ .CommonLabels.severity }}"
+        disableResolveMessage: false
+
+policies:
+  - orgId: 1
+    receiver: PagerDuty
+    group_by:
+      - grafana_folder
+      - alertname
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+
+groups:
+  - orgId: 1
+    name: Zenith Critical Alerts
+    folder: Zenith
+    interval: 1m
+    rules:
+      # High API Error Rate (>5% 5xx for 5 min)
+      - uid: api-error-rate
+        title: High API Error Rate
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(http_request_duration_seconds_count[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A / $B) * 100 > 5
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 5xx error rate exceeds 5%"
+          description: "The API is returning a high percentage of 5xx errors. Check application logs for the root cause."
+
+      # Celery Task Failure Spike (>10% failure rate for 5 min)
+      - uid: celery-failure-spike
+        title: Celery Task Failure Spike
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_celery_tasks_total{status="failure"}[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_celery_tasks_total[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A / $B) * 100 > 10
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Celery task failure rate exceeds 10%"
+          description: "A high percentage of Celery tasks are failing. Check worker logs and task error details."
+
+      # Webhook Processing Failures (>5% failure rate for 5 min)
+      - uid: webhook-failures
+        title: Webhook Processing Failures
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_webhooks_received_total{status="failed"}[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_webhooks_received_total[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A / $B) * 100 > 5
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Webhook failure rate exceeds 5%"
+          description: "Webhook processing is failing at a high rate. Data ingestion from providers may be impacted."
+
+      # Database Connection Exhaustion (>80% of pool for 5 min)
+      - uid: db-connection-exhaustion
+        title: Database Connection Exhaustion
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: zenith_db_connections{state="active"} > 48
+              instant: false
+              range: true
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool near exhaustion (>80%)"
+          description: "Active database connections exceed 48 out of 60 max (pool_size=20 + max_overflow=40). Application may start rejecting requests."
+
+      # Auth Failure Spike (>20% failure rate for 5 min)
+      - uid: auth-failure-spike
+        title: Auth Failure Spike
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_auth_attempts_total{result="failure"}[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_auth_attempts_total[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A / $B) * 100 > 20
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Authentication failure rate exceeds 20%"
+          description: "Users are unable to sign in. Check Apple Sign In, Magic Link, and JWT token verification."
+
+      # Token Refresh Failures (>10% failure rate for 5 min)
+      - uid: token-refresh-failures
+        title: Token Refresh Failures
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_token_refresh_attempts_total{result=~"expired|error"}[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_token_refresh_attempts_total[5m])) or vector(0)
+              instant: false
+              range: true
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A / $B) * 100 > 10
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Token refresh failure rate exceeds 10%"
+          description: "Users are getting logged out because token refreshes are failing. Mass session invalidation may be occurring."
+
+  - orgId: 1
+    name: Zenith Warning Alerts
+    folder: Zenith
+    interval: 1m
+    rules:
+      # API Latency Spike (p95 >2s for 5 min)
+      - uid: api-latency-spike
+        title: API Latency Spike
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2
+              instant: false
+              range: true
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency exceeds 2 seconds"
+          description: "The API is responding slowly. Check database query times, external API calls, and resource utilization."
+
+      # Celery Queue Backing Up (>100 tasks for 10 min)
+      - uid: celery-queue-backlog
+        title: Celery Queue Backing Up
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(zenith_celery_queue_depth) > 100
+              instant: false
+              range: true
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Celery queue depth exceeds 100 tasks"
+          description: "Tasks are accumulating faster than workers can process them. Consider scaling workers or investigating slow tasks."
+
+      # Push Notification Failures (>30% failure rate for 15 min)
+      - uid: push-notification-failures
+        title: Push Notification Failures
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_push_notifications_total{result="failed"}[15m])) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rate(zenith_push_notifications_total[15m])) or vector(0)
+              instant: false
+              range: true
+          - refId: C
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: math
+              expression: ($A / $B) * 100 > 30
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Push notification failure rate exceeds 30%"
+          description: "A high percentage of push notifications are failing to deliver. Check APNs configuration and device token validity."

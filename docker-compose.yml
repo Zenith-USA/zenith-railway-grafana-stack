@@ -28,12 +28,12 @@ services:
     volumes:
       - loki_data:/loki
 
-  tempo: 
+  tempo:
     build:
       context: ./tempo
       dockerfile: dockerfile
       args:
-        VERSION: latest
+        VERSION: "2.6.1"
     user: root
     ports:
       - "3200:3200"
