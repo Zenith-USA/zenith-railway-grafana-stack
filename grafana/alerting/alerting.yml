@@ -31,6 +31,8 @@ groups:
       - uid: api-error-rate
         title: High API Error Rate
         condition: C
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -38,7 +40,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m])) or vector(0)
+              expr: sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m]))
               instant: false
               range: true
           - refId: B
@@ -47,7 +49,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(http_request_duration_seconds_count[5m])) or vector(0)
+              expr: sum(rate(http_request_duration_seconds_count[5m]))
               instant: false
               range: true
           - refId: C
@@ -57,7 +59,7 @@ groups:
             datasourceUid: __expr__
             model:
               type: math
-              expression: ($A / $B) * 100 > 5
+              expression: ($B > 0) && (($A / $B) * 100 > 5)
               conditions:
                 - evaluator:
                     type: gt
@@ -73,6 +75,8 @@ groups:
       - uid: celery-failure-spike
         title: Celery Task Failure Spike
         condition: C
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -80,7 +84,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_celery_tasks_total{status="failure"}[5m])) or vector(0)
+              expr: sum(rate(zenith_celery_tasks_total{status="failure"}[5m]))
               instant: false
               range: true
           - refId: B
@@ -89,7 +93,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_celery_tasks_total[5m])) or vector(0)
+              expr: sum(rate(zenith_celery_tasks_total[5m]))
               instant: false
               range: true
           - refId: C
@@ -99,7 +103,7 @@ groups:
             datasourceUid: __expr__
             model:
               type: math
-              expression: ($A / $B) * 100 > 10
+              expression: ($B > 0) && (($A / $B) * 100 > 10)
               conditions:
                 - evaluator:
                     type: gt
@@ -115,6 +119,8 @@ groups:
       - uid: webhook-failures
         title: Webhook Processing Failures
         condition: C
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -122,7 +128,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_webhooks_received_total{status="failed"}[5m])) or vector(0)
+              expr: sum(rate(zenith_webhooks_received_total{status="failed"}[5m]))
               instant: false
               range: true
           - refId: B
@@ -131,7 +137,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_webhooks_received_total[5m])) or vector(0)
+              expr: sum(rate(zenith_webhooks_received_total[5m]))
               instant: false
               range: true
           - refId: C
@@ -141,7 +147,7 @@ groups:
             datasourceUid: __expr__
             model:
               type: math
-              expression: ($A / $B) * 100 > 5
+              expression: ($B > 0) && (($A / $B) * 100 > 5)
               conditions:
                 - evaluator:
                     type: gt
@@ -154,9 +160,12 @@ groups:
           description: "Webhook processing is failing at a high rate. Data ingestion from providers may be impacted."
 
       # Database Connection Exhaustion (>80% of pool for 5 min)
+      # NOTE: zenith_db_connections is a scale-up placeholder metric, not actively recorded yet
       - uid: db-connection-exhaustion
         title: Database Connection Exhaustion
         condition: A
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -178,6 +187,8 @@ groups:
       - uid: auth-failure-spike
         title: Auth Failure Spike
         condition: C
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -185,7 +196,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_auth_attempts_total{result="failure"}[5m])) or vector(0)
+              expr: sum(rate(zenith_auth_attempts_total{result="failure"}[5m]))
               instant: false
               range: true
           - refId: B
@@ -194,7 +205,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_auth_attempts_total[5m])) or vector(0)
+              expr: sum(rate(zenith_auth_attempts_total[5m]))
               instant: false
               range: true
           - refId: C
@@ -204,7 +215,7 @@ groups:
             datasourceUid: __expr__
             model:
               type: math
-              expression: ($A / $B) * 100 > 20
+              expression: ($B > 0) && (($A / $B) * 100 > 20)
               conditions:
                 - evaluator:
                     type: gt
@@ -220,6 +231,8 @@ groups:
       - uid: token-refresh-failures
         title: Token Refresh Failures
         condition: C
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -227,7 +240,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_token_refresh_attempts_total{result=~"expired|error"}[5m])) or vector(0)
+              expr: sum(rate(zenith_token_refresh_attempts_total{result=~"expired|error"}[5m]))
               instant: false
               range: true
           - refId: B
@@ -236,7 +249,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_token_refresh_attempts_total[5m])) or vector(0)
+              expr: sum(rate(zenith_token_refresh_attempts_total[5m]))
               instant: false
               range: true
           - refId: C
@@ -246,7 +259,7 @@ groups:
             datasourceUid: __expr__
             model:
               type: math
-              expression: ($A / $B) * 100 > 10
+              expression: ($B > 0) && (($A / $B) * 100 > 10)
               conditions:
                 - evaluator:
                     type: gt
@@ -267,6 +280,8 @@ groups:
       - uid: api-latency-spike
         title: API Latency Spike
         condition: A
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -285,9 +300,12 @@ groups:
           description: "The API is responding slowly. Check database query times, external API calls, and resource utilization."
 
       # Celery Queue Backing Up (>100 tasks for 10 min)
+      # NOTE: zenith_celery_queue_depth is a scale-up placeholder metric, not actively recorded yet
       - uid: celery-queue-backlog
         title: Celery Queue Backing Up
         condition: A
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -309,6 +327,8 @@ groups:
       - uid: push-notification-failures
         title: Push Notification Failures
         condition: C
+        noDataState: OK
+        execErrState: OK
         data:
           - refId: A
             relativeTimeRange:
@@ -316,7 +336,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_push_notifications_total{result="failed"}[15m])) or vector(0)
+              expr: sum(rate(zenith_push_notifications_total{result="failed"}[15m]))
               instant: false
               range: true
           - refId: B
@@ -325,7 +345,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_push_notifications_total[15m])) or vector(0)
+              expr: sum(rate(zenith_push_notifications_total[15m]))
               instant: false
               range: true
           - refId: C
@@ -335,7 +355,7 @@ groups:
             datasourceUid: __expr__
             model:
               type: math
-              expression: ($A / $B) * 100 > 30
+              expression: ($B > 0) && (($A / $B) * 100 > 30)
               conditions:
                 - evaluator:
                     type: gt
