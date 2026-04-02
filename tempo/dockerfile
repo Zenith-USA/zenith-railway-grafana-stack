@@ -1,7 +1,5 @@
 # Pinned to 2.6.1 — versions 2.7+ require Kafka for the distributor
-ARG VERSION=2.6.1
-
-FROM grafana/tempo:${VERSION}
+FROM grafana/tempo:2.6.1
 
 COPY tempo.yml /etc/tempo/tempo.yml
 
