@@ -10,4 +10,4 @@ USER root
 RUN chmod +x /usr/local/bin/replace_env.sh
 
 ENTRYPOINT []
-CMD ["/bin/sh", "-c", "/usr/local/bin/replace_env.sh /etc/prometheus/prom.yml.tpl /etc/prometheus/prom.yml && prometheus --config.file=/etc/prometheus/prom.yml --storage.tsdb.path=/prometheus"]
+CMD ["/bin/sh", "-c", "/usr/local/bin/replace_env.sh /etc/prometheus/prom.yml.tpl /etc/prometheus/prom.yml && prometheus --config.file=/etc/prometheus/prom.yml --storage.tsdb.path=/prometheus --storage.tsdb.retention.time=30d"]
