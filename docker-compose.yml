@@ -15,6 +15,23 @@ services:
       - prometheus_data:/prometheus
     environment:
       - ZENITH_API_TARGET=${ZENITH_API_TARGET:-host.docker.internal:8000}
+      # Local API is plain HTTP; Railway sets this to https
+      - ZENITH_API_SCHEME=${ZENITH_API_SCHEME:-http}
+      - PUSHGATEWAY_TARGET=${PUSHGATEWAY_TARGET:-pushgateway:9091}
+      # Stamped onto every series as an external label
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+
+  pushgateway:
+    build:
+      context: ./pushgateway
+      dockerfile: dockerfile
+      args:
+        VERSION: latest
+    user: root
+    ports:
+      - "9091:9091"
+    volumes:
+      - pushgateway_data:/data
 
   loki:
     build:
@@ -60,9 +77,11 @@ services:
       - LOKI_INTERNAL_URL=http://loki:3100
       - PROMETHEUS_INTERNAL_URL=http://prometheus:9090
       - TEMPO_INTERNAL_URL=http://tempo:3200
+      - PAGERDUTY_INTEGRATION_KEY=${PAGERDUTY_INTEGRATION_KEY:-dummy-local-key-never-fires}
 
-volumes: 
+volumes:
   prometheus_data:
   loki_data:
   grafana_data:
   tempo_data:
+  pushgateway_data:

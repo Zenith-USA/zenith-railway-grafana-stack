@@ -1,0 +1,8 @@
+ARG VERSION=latest
+
+FROM prom/pushgateway:${VERSION}
+
+# Celery workers can't be scraped, so they push here and Prometheus scrapes this.
+# Persistence matters: without it a restart zeroes every pushed counter, which
+# reads downstream as a false drop in rate() queries.
+CMD ["--persistence.file=/data/pushgateway.data", "--persistence.interval=5m"]

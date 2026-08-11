@@ -75,9 +75,11 @@ Examples:
 - Grafana: `VERSION=11.5.2`
 - Loki: `VERSION=3.4.2`
 - Prometheus: `VERSION=v3.2.1`
-- Tempo: `VERSION=v2.7.1`
+- Tempo: `VERSION=2.9.0`
 
 This allows you to update each component independently as needed.
+
+> **⚠️ Note on Tempo v2.10.0**: There is a known issue with Tempo v2.10.0 where the `compactor` configuration block is not recognized, causing startup failures. This template is pinned to v2.9.0 until this issue is resolved in a future release.
 
 ## Project Structure & Services
 

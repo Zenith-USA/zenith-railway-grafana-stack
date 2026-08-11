@@ -40,7 +40,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m]))
+              expr: last_over_time((sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m])))[5m:])
               instant: false
               range: true
           - refId: B
@@ -49,7 +49,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(http_request_duration_seconds_count[5m]))
+              expr: last_over_time((sum(rate(http_request_duration_seconds_count[5m])))[5m:])
               instant: false
               range: true
           - refId: C
@@ -84,7 +84,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_celery_tasks_total{status="failure"}[5m]))
+              expr: last_over_time((sum(rate(zenith_celery_tasks_total{status="failure"}[5m])))[5m:])
               instant: false
               range: true
           - refId: B
@@ -93,7 +93,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_celery_tasks_total[5m]))
+              expr: last_over_time((sum(rate(zenith_celery_tasks_total[5m])))[5m:])
               instant: false
               range: true
           - refId: C
@@ -128,7 +128,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_webhooks_received_total{status="failed"}[5m]))
+              expr: last_over_time((sum(rate(zenith_webhooks_received_total{status="failed"}[5m])))[5m:])
               instant: false
               range: true
           - refId: B
@@ -137,7 +137,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_webhooks_received_total[5m]))
+              expr: last_over_time((sum(rate(zenith_webhooks_received_total[5m])))[5m:])
               instant: false
               range: true
           - refId: C
@@ -196,7 +196,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_auth_attempts_total{result="failure"}[5m]))
+              expr: last_over_time((sum(rate(zenith_auth_attempts_total{result="failure"}[5m])))[5m:])
               instant: false
               range: true
           - refId: B
@@ -205,7 +205,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_auth_attempts_total[5m]))
+              expr: last_over_time((sum(rate(zenith_auth_attempts_total[5m])))[5m:])
               instant: false
               range: true
           - refId: C
@@ -240,7 +240,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_token_refresh_attempts_total{result=~"expired|error"}[5m]))
+              expr: last_over_time((sum(rate(zenith_token_refresh_attempts_total{result=~"expired|error"}[5m])))[5m:])
               instant: false
               range: true
           - refId: B
@@ -249,7 +249,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_token_refresh_attempts_total[5m]))
+              expr: last_over_time((sum(rate(zenith_token_refresh_attempts_total[5m])))[5m:])
               instant: false
               range: true
           - refId: C
@@ -289,7 +289,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2
+              expr: last_over_time((histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2)[5m:])
               instant: false
               range: true
         for: 5m
@@ -336,7 +336,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_push_notifications_total{result="failed"}[15m]))
+              expr: last_over_time((sum(rate(zenith_push_notifications_total{result="failed"}[15m])))[5m:])
               instant: false
               range: true
           - refId: B
@@ -345,7 +345,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rate(zenith_push_notifications_total[15m]))
+              expr: last_over_time((sum(rate(zenith_push_notifications_total[15m])))[5m:])
               instant: false
               range: true
           - refId: C
