@@ -1,5 +1,7 @@
 global:
   scrape_interval: 15s
+  external_labels:
+    environment: ${ENVIRONMENT:-development}
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -7,8 +9,18 @@ scrape_configs:
       - targets: ['localhost:9090']
 
   - job_name: 'zenith-api'
-    scheme: https
+    scheme: ${ZENITH_API_SCHEME:-http}
     static_configs:
-      - targets: ['${ZENITH_API_TARGET:-api.zenithwellness.health}']
+      - targets: ['${ZENITH_API_TARGET:-host.docker.internal:8000}']
+        labels:
+          environment: '${ENVIRONMENT:-development}'
     metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'pushgateway'
+    honor_labels: true
+    static_configs:
+      - targets: ['${PUSHGATEWAY_TARGET:-pushgateway:9091}']
+        labels:
+          environment: '${ENVIRONMENT:-development}'
     scrape_interval: 15s

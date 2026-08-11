@@ -1,2 +1,7 @@
 # example deps
 node_modules/
+
+# local env — contains PagerDuty integration key
+.env
+.env.*
+!.env.example
