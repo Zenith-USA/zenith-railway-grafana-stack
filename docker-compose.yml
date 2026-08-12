@@ -78,6 +78,11 @@ services:
       - PROMETHEUS_INTERNAL_URL=http://prometheus:9090
       - TEMPO_INTERNAL_URL=http://tempo:3200
       - PAGERDUTY_INTEGRATION_KEY=${PAGERDUTY_INTEGRATION_KEY:-dummy-local-key-never-fires}
+      # Dummy defaults keep Grafana bootable locally — provisioning rejects an
+      # empty bottoken. Real values live on the Railway Grafana service only.
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-dummy-local-token-never-fires}
+      - TELEGRAM_ALERT_CHAT_ID=${TELEGRAM_ALERT_CHAT_ID:-0}
+      - TELEGRAM_WARN_CHAT_ID=${TELEGRAM_WARN_CHAT_ID:-0}
 
 volumes:
   prometheus_data:
