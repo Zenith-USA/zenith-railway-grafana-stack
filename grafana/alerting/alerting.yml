@@ -11,15 +11,59 @@ contactPoints:
           severity: "{{ .CommonLabels.severity }}"
         disableResolveMessage: false
 
-policies:
   - orgId: 1
-    receiver: PagerDuty
+    name: TelegramCritical
+    receivers:
+      - uid: telegram-critical
+        type: telegram
+        settings:
+          bottoken: $TELEGRAM_BOT_TOKEN
+          chatid: "${TELEGRAM_ALERT_CHAT_ID} "
+          parse_mode: HTML
+          disable_web_page_preview: true
+          message: |
+            <b>{{ if eq .Status "firing" }}🔴{{ else }}✅{{ end }} {{ .Status | toUpper }}: {{ .CommonLabels.alertname }}</b>
+            {{ range .Alerts -}}
+            {{ .Annotations.summary }}
+            {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
+            {{ end -}}
+        disableResolveMessage: false
+
+  - orgId: 1
+    name: TelegramWarning
+    receivers:
+      - uid: telegram-warning
+        type: telegram
+        settings:
+          bottoken: $TELEGRAM_BOT_TOKEN
+          chatid: "${TELEGRAM_WARN_CHAT_ID} "
+          parse_mode: HTML
+          disable_web_page_preview: true
+          message: |
+            <b>{{ if eq .Status "firing" }}🟡{{ else }}✅{{ end }} {{ .Status | toUpper }}: {{ .CommonLabels.alertname }}</b>
+            {{ range .Alerts -}}
+            {{ .Annotations.summary }}
+            {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
+            {{ end -}}
+        disableResolveMessage: false
+
+policies:
+  # Default route is Warnings; critical alerts break out to the Alerts group.
+  - orgId: 1
+    receiver: TelegramWarning
     group_by:
       - grafana_folder
       - alertname
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
+    routes:
+      - receiver: TelegramCritical
+        object_matchers:
+          - ["severity", "=", "critical"]
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
 
 groups:
   - orgId: 1
