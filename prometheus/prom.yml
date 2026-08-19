@@ -17,10 +17,20 @@ scrape_configs:
     metrics_path: '/metrics'
     scrape_interval: 15s
 
-  - job_name: 'pushgateway'
-    honor_labels: true
+  # Celery task/worker metrics from Flower's event stream
+  - job_name: 'flower'
     static_configs:
-      - targets: ['${PUSHGATEWAY_TARGET:-pushgateway:9091}']
+      - targets: ['${FLOWER_TARGET:-flower:5555}']
         labels:
           environment: '${ENVIRONMENT:-development}'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Broker metrics incl. per-queue depth, via the rabbitmq_prometheus plugin
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['${RABBITMQ_TARGET:-rabbitmq:15692}']
+        labels:
+          environment: '${ENVIRONMENT:-development}'
+    metrics_path: '/metrics'
     scrape_interval: 15s
