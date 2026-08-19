@@ -17,21 +17,10 @@ services:
       - ZENITH_API_TARGET=${ZENITH_API_TARGET:-host.docker.internal:8000}
       # Local API is plain HTTP; Railway sets this to https
       - ZENITH_API_SCHEME=${ZENITH_API_SCHEME:-http}
-      - PUSHGATEWAY_TARGET=${PUSHGATEWAY_TARGET:-pushgateway:9091}
+      - FLOWER_TARGET=${FLOWER_TARGET:-flower:5555}
+      - RABBITMQ_TARGET=${RABBITMQ_TARGET:-rabbitmq:15692}
       # Stamped onto every series as an external label
       - ENVIRONMENT=${ENVIRONMENT:-development}
-
-  pushgateway:
-    build:
-      context: ./pushgateway
-      dockerfile: dockerfile
-      args:
-        VERSION: latest
-    user: root
-    ports:
-      - "9091:9091"
-    volumes:
-      - pushgateway_data:/data
 
   loki:
     build:
@@ -89,4 +78,3 @@ volumes:
   loki_data:
   grafana_data:
   tempo_data:
-  pushgateway_data:
