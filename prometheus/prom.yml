@@ -20,7 +20,7 @@ scrape_configs:
   # Celery task/worker metrics from Flower's event stream
   - job_name: 'flower'
     static_configs:
-      - targets: ['${FLOWER_TARGET:-flower:5555}']
+      - targets: ['${FLOWER_TARGET:-imaginative-dream.railway.internal:5555}']
         labels:
           environment: '${ENVIRONMENT:-development}'
     metrics_path: '/metrics'
@@ -30,6 +30,15 @@ scrape_configs:
   - job_name: 'rabbitmq'
     static_configs:
       - targets: ['${RABBITMQ_TARGET:-rabbitmq:15692}']
+        labels:
+          environment: '${ENVIRONMENT:-development}'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Redis memory/eviction/keyspace via oliver006/redis_exporter sidecar
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['${REDIS_EXPORTER_TARGET:-redis-exporter:9121}']
         labels:
           environment: '${ENVIRONMENT:-development}'
     metrics_path: '/metrics'

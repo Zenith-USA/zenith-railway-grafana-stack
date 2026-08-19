@@ -19,6 +19,7 @@ services:
       - ZENITH_API_SCHEME=${ZENITH_API_SCHEME:-http}
       - FLOWER_TARGET=${FLOWER_TARGET:-flower:5555}
       - RABBITMQ_TARGET=${RABBITMQ_TARGET:-rabbitmq:15692}
+      - REDIS_EXPORTER_TARGET=${REDIS_EXPORTER_TARGET:-redis-exporter:9121}
       # Stamped onto every series as an external label
       - ENVIRONMENT=${ENVIRONMENT:-development}
 
