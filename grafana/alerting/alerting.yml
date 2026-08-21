@@ -84,7 +84,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m])))[5m:])
+              expr: last_over_time((sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: B
@@ -93,7 +93,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(http_request_duration_seconds_count[5m])))[5m:])
+              expr: last_over_time((sum(rate(http_request_duration_seconds_count[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: C
@@ -128,7 +128,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(flower_events_total{type="task-failed"}[5m])))[5m:])
+              expr: last_over_time((sum(rate(flower_events_total{type="task-failed"}[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: B
@@ -137,7 +137,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(flower_events_total{type="task-received"}[5m])))[5m:])
+              expr: last_over_time((sum(rate(flower_events_total{type="task-received"}[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: C
@@ -313,7 +313,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_webhooks_received_total{status="failed"}[5m])))[5m:])
+              expr: last_over_time((sum(rate(zenith_webhooks_received_total{status="failed"}[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: B
@@ -322,7 +322,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_webhooks_received_total[5m])))[5m:])
+              expr: last_over_time((sum(rate(zenith_webhooks_received_total[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: C
@@ -372,7 +372,7 @@ groups:
       - uid: auth-failure-spike
         title: Auth Failure Spike
         condition: C
-        noDataState: OK
+        noDataState: NoData
         execErrState: OK
         data:
           - refId: A
@@ -381,7 +381,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_auth_attempts_total{result="failure"}[5m])))[5m:])
+              expr: last_over_time((sum(rate(zenith_auth_attempts_total{result="failure"}[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: B
@@ -390,7 +390,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_auth_attempts_total[5m])))[5m:])
+              expr: last_over_time((sum(rate(zenith_auth_attempts_total[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: C
@@ -416,7 +416,7 @@ groups:
       - uid: token-refresh-failures
         title: Token Refresh Failures
         condition: C
-        noDataState: OK
+        noDataState: NoData
         execErrState: OK
         data:
           - refId: A
@@ -425,7 +425,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_token_refresh_attempts_total{result=~"expired|error"}[5m])))[5m:])
+              expr: last_over_time((sum(rate(zenith_token_refresh_attempts_total{result=~"expired|error"}[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: B
@@ -434,7 +434,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_token_refresh_attempts_total[5m])))[5m:])
+              expr: last_over_time((sum(rate(zenith_token_refresh_attempts_total[5m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: C
@@ -464,8 +464,8 @@ groups:
       # API Latency Spike (p95 >2s for 5 min)
       - uid: api-latency-spike
         title: API Latency Spike
-        condition: A
-        noDataState: OK
+        condition: B
+        noDataState: NoData
         execErrState: OK
         data:
           - refId: A
@@ -474,9 +474,21 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2)[5m:])
+              expr: last_over_time((histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) or vector(0))[5m:])
               instant: false
               range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [2]
         for: 5m
         labels:
           severity: warning
@@ -487,8 +499,8 @@ groups:
       # Celery Queue Backing Up (>100 messages for 10 min)
       - uid: celery-queue-backlog
         title: Celery Queue Backing Up
-        condition: A
-        noDataState: OK
+        condition: B
+        noDataState: NoData
         execErrState: OK
         data:
           - refId: A
@@ -497,9 +509,21 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(rabbitmq_queue_messages_ready{queue!~"celeryev.*|.*pidbox"}) > 100
+              expr: sum(rabbitmq_queue_messages_ready{queue!~"celeryev.*|.*pidbox"}) or vector(0)
               instant: false
               range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [100]
         for: 10m
         labels:
           severity: warning
@@ -511,7 +535,7 @@ groups:
       - uid: push-notification-failures
         title: Push Notification Failures
         condition: C
-        noDataState: OK
+        noDataState: NoData
         execErrState: OK
         data:
           - refId: A
@@ -520,7 +544,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_push_notifications_total{result="failed"}[15m])))[5m:])
+              expr: last_over_time((sum(rate(zenith_push_notifications_total{result="failed"}[15m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: B
@@ -529,7 +553,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_push_notifications_total[15m])))[5m:])
+              expr: last_over_time((sum(rate(zenith_push_notifications_total[15m])) or vector(0))[5m:])
               instant: false
               range: true
           - refId: C
