@@ -75,7 +75,7 @@ groups:
       - uid: api-error-rate
         title: High API Error Rate
         condition: C
-        noDataState: OK
+        noDataState: NoData
         execErrState: OK
         data:
           - refId: A
@@ -119,7 +119,7 @@ groups:
       - uid: celery-failure-spike
         title: Celery Task Failure Spike
         condition: C
-        noDataState: OK
+        noDataState: NoData
         execErrState: OK
         data:
           - refId: A
@@ -128,7 +128,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_celery_tasks_total{status="failure"}[5m])))[5m:])
+              expr: last_over_time((sum(rate(flower_events_total{type="task-failed"}[5m])))[5m:])
               instant: false
               range: true
           - refId: B
@@ -137,7 +137,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: last_over_time((sum(rate(zenith_celery_tasks_total[5m])))[5m:])
+              expr: last_over_time((sum(rate(flower_events_total{type="task-received"}[5m])))[5m:])
               instant: false
               range: true
           - refId: C
@@ -159,11 +159,81 @@ groups:
           summary: "Celery task failure rate exceeds 10%"
           description: "A high percentage of Celery tasks are failing. Check worker logs and task error details."
 
+
+      # Scrape Target Down (any Prometheus target unreachable for 5 min)
+      - uid: scrape-target-down
+        title: Scrape Target Down
+        condition: A
+        noDataState: Alerting
+        execErrState: Alerting
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: up == 0
+              instant: false
+              range: true
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target {{ $labels.job }} is down"
+          description: "{{ $labels.instance }} has not responded to scrapes for 5 minutes. Metrics from this service are missing."
+
+      # Redis Unreachable (exporter is up but cannot reach Redis)
+      - uid: redis-unreachable
+        title: Redis Unreachable
+        condition: A
+        noDataState: Alerting
+        execErrState: Alerting
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: redis_up == 0
+              instant: false
+              range: true
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is unreachable"
+          description: "redis_exporter is running but cannot connect to Redis. Garmin backfill rate-limit state and the notification mute switch are unavailable."
+
+      # No Celery Workers Online
+      - uid: no-celery-workers
+        title: No Celery Workers Online
+        condition: A
+        noDataState: Alerting
+        execErrState: Alerting
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: count(flower_worker_online == 1) < 2
+              instant: false
+              range: true
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Fewer than 2 Celery workers online"
+          description: "Worker death was completely silent during the 2026-08-18 outage. Check the Celery Main service in Railway."
+
       # Webhook Processing Failures (>5% failure rate for 5 min)
       - uid: webhook-failures
         title: Webhook Processing Failures
         condition: C
-        noDataState: OK
+        noDataState: NoData
         execErrState: OK
         data:
           - refId: A
@@ -203,8 +273,8 @@ groups:
           summary: "Webhook failure rate exceeds 5%"
           description: "Webhook processing is failing at a high rate. Data ingestion from providers may be impacted."
 
-      # Database Connection Exhaustion (>80% of pool for 5 min)
-      # NOTE: zenith_db_connections is a scale-up placeholder metric, not actively recorded yet
+      # DISABLED: zenith_db_connections died with the pushgateway (worker-emitted).
+      # Re-enable against postgres_exporter's pg_stat_activity_count. See ZEN-486.
       - uid: db-connection-exhaustion
         title: Database Connection Exhaustion
         condition: A
@@ -343,8 +413,7 @@ groups:
           summary: "API p95 latency exceeds 2 seconds"
           description: "The API is responding slowly. Check database query times, external API calls, and resource utilization."
 
-      # Celery Queue Backing Up (>100 tasks for 10 min)
-      # NOTE: zenith_celery_queue_depth is a scale-up placeholder metric, not actively recorded yet
+      # Celery Queue Backing Up (>100 messages for 10 min)
       - uid: celery-queue-backlog
         title: Celery Queue Backing Up
         condition: A
@@ -357,7 +426,7 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: sum(zenith_celery_queue_depth) > 100
+              expr: sum(rabbitmq_queue_messages_ready{queue!~"celeryev.*|.*pidbox"}) > 100
               instant: false
               range: true
         for: 10m

@@ -12,7 +12,11 @@
   },
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "tags": ["logs", "loki", "api"],
+  "tags": [
+    "logs",
+    "loki",
+    "api"
+  ],
   "templating": {
     "list": [
       {
@@ -33,8 +37,12 @@
         "allValue": ".+",
         "current": {
           "selected": true,
-          "text": ["All"],
-          "value": ["$__all"]
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
         "refresh": 2,
         "sort": 1
@@ -57,8 +65,12 @@
         "allValue": ".+",
         "current": {
           "selected": true,
-          "text": ["All"],
-          "value": ["$__all"]
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
         "refresh": 2,
         "sort": 1
@@ -73,16 +85,50 @@
         "allValue": ".+",
         "current": {
           "selected": true,
-          "text": ["INFO", "WARNING", "ERROR", "CRITICAL"],
-          "value": ["INFO", "WARNING", "ERROR", "CRITICAL"]
+          "text": [
+            "INFO",
+            "WARNING",
+            "ERROR",
+            "CRITICAL"
+          ],
+          "value": [
+            "INFO",
+            "WARNING",
+            "ERROR",
+            "CRITICAL"
+          ]
         },
         "options": [
-          { "text": "All", "value": "$__all", "selected": false },
-          { "text": "DEBUG", "value": "DEBUG", "selected": false },
-          { "text": "INFO", "value": "INFO", "selected": true },
-          { "text": "WARNING", "value": "WARNING", "selected": true },
-          { "text": "ERROR", "value": "ERROR", "selected": true },
-          { "text": "CRITICAL", "value": "CRITICAL", "selected": true }
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": false
+          },
+          {
+            "text": "DEBUG",
+            "value": "DEBUG",
+            "selected": false
+          },
+          {
+            "text": "INFO",
+            "value": "INFO",
+            "selected": true
+          },
+          {
+            "text": "WARNING",
+            "value": "WARNING",
+            "selected": true
+          },
+          {
+            "text": "ERROR",
+            "value": "ERROR",
+            "selected": true
+          },
+          {
+            "text": "CRITICAL",
+            "value": "CRITICAL",
+            "selected": true
+          }
         ]
       },
       {
@@ -95,6 +141,20 @@
           "value": ""
         },
         "options": []
+      },
+      {
+        "type": "textbox",
+        "name": "trace_id",
+        "label": "Trace ID",
+        "description": "Filter every panel to one request. Trace IDs flow iOS -> API -> worker.",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [],
+        "hide": 0,
+        "skipUrlSync": false
       }
     ]
   },
@@ -102,7 +162,12 @@
     {
       "type": "row",
       "title": "Key Stats",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "collapsed": false,
       "id": 100
     },
@@ -111,7 +176,12 @@
       "title": "Error Rate",
       "description": "Errors per minute",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 1
+      },
       "datasource": {
         "type": "loki",
         "uid": "grafana_lokiq"
@@ -133,9 +203,18 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 10 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
             ]
           },
           "color": {
@@ -146,7 +225,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -162,7 +243,12 @@
       "title": "Warning Rate",
       "description": "Warnings per minute",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 1
+      },
       "datasource": {
         "type": "loki",
         "uid": "grafana_lokiq"
@@ -184,9 +270,18 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "orange", "value": 20 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "orange",
+                "value": 20
+              }
             ]
           },
           "color": {
@@ -197,7 +292,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -213,7 +310,12 @@
       "title": "Critical Count",
       "description": "Critical logs in the last hour",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
       "datasource": {
         "type": "loki",
         "uid": "grafana_lokiq"
@@ -235,8 +337,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
             ]
           },
           "color": {
@@ -247,7 +355,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -261,7 +371,12 @@
     {
       "type": "row",
       "title": "Log Volume",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
       "collapsed": false,
       "id": 101
     },
@@ -269,7 +384,12 @@
       "id": 4,
       "title": "Log Volume by Level",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
       "datasource": {
         "type": "loki",
         "uid": "grafana_lokiq"
@@ -312,33 +432,78 @@
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "DEBUG" },
+            "matcher": {
+              "id": "byName",
+              "options": "DEBUG"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "INFO" },
+            "matcher": {
+              "id": "byName",
+              "options": "INFO"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "WARNING" },
+            "matcher": {
+              "id": "byName",
+              "options": "WARNING"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "ERROR" },
+            "matcher": {
+              "id": "byName",
+              "options": "ERROR"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "CRITICAL" },
+            "matcher": {
+              "id": "byName",
+              "options": "CRITICAL"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "purple" } }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
             ]
           }
         ]
@@ -359,7 +524,12 @@
       "id": 5,
       "title": "Log Volume by Service",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
       "datasource": {
         "type": "loki",
         "uid": "grafana_lokiq"
@@ -417,7 +587,12 @@
     {
       "type": "row",
       "title": "Error Analysis",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
       "collapsed": false,
       "id": 102
     },
@@ -426,7 +601,12 @@
       "title": "Error Logs",
       "description": "ERROR and CRITICAL log lines",
       "type": "logs",
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 15 },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
       "datasource": {
         "type": "loki",
         "uid": "grafana_lokiq"
@@ -438,7 +618,7 @@
             "type": "loki",
             "uid": "grafana_lokiq"
           },
-          "expr": "{platform=~\"$platform\", service=~\"$service\", level=~\"ERROR|CRITICAL\"} |= \"$search\"",
+          "expr": "{platform=~\"$platform\", service=~\"$service\", level=~\"ERROR|CRITICAL\"} |= \"$search\" |= \"$trace_id\"",
           "queryType": "range"
         }
       ],
@@ -456,7 +636,12 @@
     {
       "type": "row",
       "title": "Platform Views",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
       "collapsed": false,
       "id": 103
     },
@@ -464,7 +649,12 @@
       "id": 7,
       "title": "API Logs",
       "type": "logs",
-      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 26 },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
       "datasource": {
         "type": "loki",
         "uid": "grafana_lokiq"
@@ -476,7 +666,7 @@
             "type": "loki",
             "uid": "grafana_lokiq"
           },
-          "expr": "{platform=\"api\", service=~\"$service\", level=~\"$level\"} |= \"$search\"",
+          "expr": "{platform=\"api\", service=~\"$service\", level=~\"$level\"} |= \"$search\" |= \"$trace_id\"",
           "queryType": "range"
         }
       ],
@@ -495,7 +685,12 @@
       "id": 8,
       "title": "Worker Logs",
       "type": "logs",
-      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 26 },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
       "datasource": {
         "type": "loki",
         "uid": "grafana_lokiq"
@@ -507,7 +702,7 @@
             "type": "loki",
             "uid": "grafana_lokiq"
           },
-          "expr": "{platform=\"worker\", service=~\"$service\", level=~\"$level\"} |= \"$search\"",
+          "expr": "{platform=\"worker\", service=~\"$service\", level=~\"$level\"} |= \"$search\" |= \"$trace_id\"",
           "queryType": "range"
         }
       ],

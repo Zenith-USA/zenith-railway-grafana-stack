@@ -1,7 +1,7 @@
 {
   "uid": null,
   "title": "Celery Workers",
-  "description": "Monitoring dashboard for Celery workers: task throughput, failure rates, queue depth, and retries.",
+  "description": "Celery task throughput, queue depth, and worker liveness. Sourced from the RabbitMQ prometheus plugin and Flower's event stream.",
   "schemaVersion": 39,
   "editable": false,
   "timezone": "browser",
@@ -13,7 +13,12 @@
   "timepicker": {},
   "fiscalYearStartMonth": 0,
   "liveNow": false,
-  "tags": ["celery", "workers"],
+  "tags": [
+    "celery",
+    "workers",
+    "rabbitmq",
+    "flower"
+  ],
   "templating": {
     "list": []
   },
@@ -37,117 +42,27 @@
     {
       "type": "row",
       "title": "Key Stats",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "collapsed": false,
       "panels": []
     },
     {
       "type": "stat",
-      "title": "Task Throughput",
-      "description": "Total tasks processed per second across all workers",
-      "id": 2,
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grafana_prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(zenith_celery_tasks_total[5m]))",
-          "legendFormat": "",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "red", "value": 100 }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
-      }
-    },
-    {
-      "type": "stat",
-      "title": "Task Failure Rate",
-      "description": "Percentage of tasks failing across all workers",
-      "id": 3,
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grafana_prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(zenith_celery_tasks_total{status=\"failure\"}[5m])) / sum(rate(zenith_celery_tasks_total[5m])) * 100",
-          "legendFormat": "",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 20 }
-            ]
-          },
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "min": 0,
-          "max": 100
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
-      }
-    },
-    {
-      "type": "stat",
       "title": "Total Queue Depth",
-      "description": "Total number of tasks waiting in all queues",
-      "id": 4,
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "description": "Messages waiting across all application queues",
+      "id": 2,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "grafana_prometheus"
@@ -155,7 +70,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(zenith_celery_queue_depth)",
+          "expr": "sum(rabbitmq_queue_messages_ready{queue!~\"celeryev.*|.*pidbox\"})",
           "legendFormat": "",
           "instant": true
         }
@@ -166,9 +81,18 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 100 },
-              { "color": "red", "value": 500 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
             ]
           },
           "color": {
@@ -180,7 +104,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -193,10 +119,15 @@
     },
     {
       "type": "stat",
-      "title": "Retry Rate",
-      "description": "Task retries per second",
-      "id": 5,
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "title": "Workers Online",
+      "description": "Celery workers reporting to Flower. A drop here was invisible during the 2026-08-18 outage.",
+      "id": 3,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "grafana_prometheus"
@@ -204,20 +135,29 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(zenith_processing_retries_total[5m]))",
+          "expr": "count(flower_worker_online == 1)",
           "legendFormat": "",
           "instant": true
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "ops",
+          "unit": "short",
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 5 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
+              }
             ]
           },
           "color": {
@@ -229,7 +169,131 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Executing Now",
+      "description": "Tasks currently running across all workers",
+      "id": 4,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(flower_worker_number_of_currently_executing_tasks)",
+          "legendFormat": "",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Unacked Messages",
+      "description": "Delivered but unacknowledged. Sustained growth precedes the consumer_timeout 406 that killed the worker in ZEN-478.",
+      "id": 5,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rabbitmq_channel_messages_unacked)",
+          "legendFormat": "",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 200
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -242,161 +306,28 @@
     },
     {
       "type": "row",
-      "title": "Task Performance",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "title": "Queue Depth",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
       "id": 6,
       "collapsed": false,
       "panels": []
     },
     {
       "type": "timeseries",
-      "title": "Task Throughput by Task",
-      "description": "Task throughput broken down by task name, showing success and failure rates",
-      "id": 7,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grafana_prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(zenith_celery_tasks_total{status=\"success\"}[5m])) by (task_name)",
-          "legendFormat": "{{task_name}} - success"
-        },
-        {
-          "refId": "B",
-          "expr": "sum(rate(zenith_celery_tasks_total{status=\"failure\"}[5m])) by (task_name)",
-          "legendFormat": "{{task_name}} - failure"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
-            }
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": ["mean", "max"]
-        }
-      }
-    },
-    {
-      "type": "timeseries",
-      "title": "Task Duration p95 by Task",
-      "description": "95th percentile task execution duration broken down by task name",
-      "id": 8,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grafana_prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.95, sum(rate(zenith_celery_task_duration_seconds_bucket[5m])) by (le, task_name))",
-          "legendFormat": "{{task_name}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
-            }
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 30 }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": ["mean", "max"]
-        }
-      }
-    },
-    {
-      "type": "row",
-      "title": "Queue Health",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
-      "id": 9,
-      "collapsed": false,
-      "panels": []
-    },
-    {
-      "type": "timeseries",
       "title": "Queue Depth by Queue",
-      "description": "Number of tasks waiting in each queue over time",
-      "id": 10,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "description": "Messages ready per queue. This is the number nobody could see during the 2026-08-18 incident.",
+      "id": 7,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "grafana_prometheus"
@@ -404,7 +335,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "zenith_celery_queue_depth",
+          "expr": "sum by (queue) (rabbitmq_queue_messages_ready{queue!~\"celeryev.*|.*pidbox\"})",
           "legendFormat": "{{queue}}"
         }
       ],
@@ -413,57 +344,46 @@
           "unit": "short",
           "custom": {
             "drawStyle": "line",
-            "lineInterpolation": "smooth",
+            "lineInterpolation": "linear",
             "lineWidth": 1,
-            "fillOpacity": 20,
-            "gradientMode": "scheme",
+            "fillOpacity": 10,
+            "showPoints": "never",
             "spanNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
             "stacking": {
               "mode": "none",
               "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
             }
           },
           "color": {
             "mode": "palette-classic"
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 100 },
-              { "color": "red", "value": 500 }
-            ]
-          },
-          "mappings": [],
-          "min": 0
+          "mappings": []
         },
         "overrides": []
       },
       "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": ["mean", "max", "lastNotNull"]
         }
       }
     },
     {
       "type": "timeseries",
-      "title": "Task Failure Rate by Task",
-      "description": "Failure rate percentage for each task over time",
-      "id": 11,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "title": "Consumers by Queue",
+      "description": "Workers attached per queue. Zero consumers with a non-zero depth means nothing is draining that queue.",
+      "id": 8,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "grafana_prometheus"
@@ -471,127 +391,55 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(zenith_celery_tasks_total{status=\"failure\"}[5m])) by (task_name) / sum(rate(zenith_celery_tasks_total[5m])) by (task_name) * 100",
-          "legendFormat": "{{task_name}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
-            }
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 20 }
-            ]
-          },
-          "mappings": [],
-          "min": 0,
-          "max": 100
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": ["mean", "max"]
-        }
-      }
-    },
-    {
-      "type": "row",
-      "title": "Task Status",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
-      "id": 12,
-      "collapsed": false,
-      "panels": []
-    },
-    {
-      "type": "piechart",
-      "title": "Task Status Distribution",
-      "description": "Distribution of task outcomes by status",
-      "id": 13,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grafana_prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(zenith_celery_tasks_total) by (status)",
-          "legendFormat": "{{status}}",
-          "instant": true
+          "expr": "sum by (queue) (rabbitmq_queue_consumers{queue!~\"celeryev.*|.*pidbox\"})",
+          "legendFormat": "{{queue}}"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
           "color": {
             "mode": "palette-classic"
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          }
+          "mappings": []
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "pieType": "donut",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
         "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "values": ["value", "percent"]
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
       }
     },
     {
       "type": "timeseries",
-      "title": "Retries by Task Type",
-      "description": "Retry rate broken down by task type",
-      "id": 14,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "title": "Consumer Utilisation",
+      "description": "Fraction of time consumers could accept messages. Below 1 means workers are the bottleneck; 0 means no consumer.",
+      "id": 9,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "grafana_prometheus"
@@ -599,8 +447,133 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(zenith_processing_retries_total[5m])) by (task_type)",
-          "legendFormat": "{{task_type}}"
+          "expr": "rabbitmq_queue_consumer_utilisation{queue!~\"celeryev.*|.*pidbox\"}",
+          "legendFormat": "{{queue}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Unacked by Queue",
+      "description": "Messages held unacknowledged per queue",
+      "id": 10,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (queue) (rabbitmq_queue_messages_unacked{queue!~\"celeryev.*|.*pidbox\"})",
+          "legendFormat": "{{queue}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Task Throughput",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 11,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Task Events",
+      "description": "Rate of Celery task lifecycle events, from Flower's event stream",
+      "id": 12,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (type) (rate(flower_events_total[5m]))",
+          "legendFormat": "{{type}}"
         }
       ],
       "fieldConfig": {
@@ -608,48 +581,462 @@
           "unit": "ops",
           "custom": {
             "drawStyle": "line",
-            "lineInterpolation": "smooth",
+            "lineInterpolation": "linear",
             "lineWidth": 1,
             "fillOpacity": 10,
-            "gradientMode": "none",
+            "showPoints": "never",
             "spanNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
             "stacking": {
               "mode": "none",
               "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
             }
           },
           "color": {
             "mode": "palette-classic"
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 5 }
-            ]
-          },
-          "mappings": [],
-          "min": 0
+          "mappings": []
         },
         "overrides": []
       },
       "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Task Events by Worker",
+      "description": "Which worker is doing the work",
+      "id": 13,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (worker) (rate(flower_events_total{type=\"task-succeeded\"}[5m]))",
+          "legendFormat": "{{worker}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
         },
+        "overrides": []
+      },
+      "options": {
         "legend": {
-          "displayMode": "table",
+          "displayMode": "list",
           "placement": "bottom",
-          "calcs": ["mean", "max"]
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Failed & Retried Tasks",
+      "description": "Non-zero here is worth investigating. Note ZEN-480: some tasks report success having stored nothing.",
+      "id": 14,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 31
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(flower_events_total{type=\"task-failed\"}[5m]))",
+          "legendFormat": "failed/s"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(flower_events_total{type=\"task-retried\"}[5m]))",
+          "legendFormat": "retried/s"
+        },
+        {
+          "refId": "C",
+          "expr": "sum(rate(rabbitmq_channel_messages_redelivered_total[5m]))",
+          "legendFormat": "redelivered/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Task Runtime p95",
+      "description": "95th percentile task runtime. Approaching the broker consumer_timeout (30 min) risks a 406 worker kill.",
+      "id": 15,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 31
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(flower_task_runtime_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.50, sum(rate(flower_task_runtime_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Workers",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 16,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker Online",
+      "description": "1 = worker is reporting. A gap is a dead or restarting worker.",
+      "id": 17,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "flower_worker_online",
+          "legendFormat": "{{worker}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Prefetched Tasks by Worker",
+      "description": "Tasks pulled from the broker but not yet started",
+      "id": 18,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (worker) (flower_worker_prefetched_tasks)",
+          "legendFormat": "{{worker}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Message Throughput",
+      "description": "Broker-level publish vs deliver vs ack rates",
+      "id": 19,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(rabbitmq_channel_messages_published_total[5m]))",
+          "legendFormat": "published/s"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(rabbitmq_channel_messages_delivered_total[5m]))",
+          "legendFormat": "delivered/s"
+        },
+        {
+          "refId": "C",
+          "expr": "sum(rate(rabbitmq_channel_messages_acked_total[5m]))",
+          "legendFormat": "acked/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Queue Message Bytes",
+      "description": "Memory held by queued messages",
+      "id": 20,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (queue) (rabbitmq_queue_messages_bytes{queue!~\"celeryev.*|.*pidbox\"})",
+          "legendFormat": "{{queue}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
       }
     }

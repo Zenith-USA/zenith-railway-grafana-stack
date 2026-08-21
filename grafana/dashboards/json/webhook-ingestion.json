@@ -1,10 +1,15 @@
 {
   "uid": null,
   "title": "Webhook Ingestion",
-  "description": "Monitoring webhook data ingestion from Garmin and Strava",
+  "description": "Webhook ingestion from Garmin and Strava. Panels for external-API latency, Strava rate limits, and sync lag were removed when the pushgateway was retired (see ZEN-483).",
   "editable": false,
   "schemaVersion": 39,
-  "tags": ["webhooks", "ingestion", "garmin", "strava"],
+  "tags": [
+    "webhooks",
+    "ingestion",
+    "garmin",
+    "strava"
+  ],
   "timezone": "browser",
   "refresh": "15s",
   "time": {
@@ -18,7 +23,12 @@
     {
       "type": "row",
       "title": "Key Stats",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "collapsed": false,
       "panels": []
@@ -27,8 +37,16 @@
       "type": "stat",
       "title": "Webhooks/sec",
       "id": 2,
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
@@ -38,9 +56,18 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "red", "value": 100 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
             ]
           },
           "mappings": []
@@ -50,7 +77,9 @@
       "options": {
         "reduceOptions": {
           "values": false,
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": ""
         },
         "orientation": "auto",
@@ -63,7 +92,10 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
           "expr": "sum(rate(zenith_webhooks_received_total[5m]))",
           "legendFormat": "",
           "instant": true,
@@ -73,34 +105,44 @@
     },
     {
       "type": "stat",
-      "title": "Webhook Failure Rate (%)",
+      "title": "Webhooks Received (total)",
       "id": 3,
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "short",
           "color": {
             "mode": "thresholds"
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 5 }
+              {
+                "color": "green",
+                "value": null
+              }
             ]
           },
           "mappings": [],
-          "min": 0,
-          "max": 100
+          "min": 0
         },
         "overrides": []
       },
       "options": {
         "reduceOptions": {
           "values": false,
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": ""
         },
         "orientation": "auto",
@@ -113,20 +155,27 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "sum(rate(zenith_webhooks_received_total{status=\"failed\"}[5m])) / sum(rate(zenith_webhooks_received_total[5m])) * 100",
+          "expr": "sum(zenith_webhooks_received_total)",
           "legendFormat": "",
-          "instant": true,
-          "range": false
+          "instant": true
         }
-      ]
+      ],
+      "description": "Cumulative webhooks received. NOTE: zenith_webhooks_received_total only ever emits status=success, so a failure rate cannot be computed today (see ZEN-480)."
     },
     {
       "type": "stat",
       "title": "Avg Processing Duration",
       "id": 4,
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "s",
@@ -136,9 +185,18 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 15 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
             ]
           },
           "mappings": []
@@ -148,7 +206,9 @@
       "options": {
         "reduceOptions": {
           "values": false,
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": ""
         },
         "orientation": "auto",
@@ -161,56 +221,11 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
           "expr": "sum(rate(zenith_webhook_processing_duration_seconds_sum[5m])) / sum(rate(zenith_webhook_processing_duration_seconds_count[5m]))",
-          "legendFormat": "",
-          "instant": true,
-          "range": false
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Data Sync Lag p95",
-      "id": 5,
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 30 },
-              { "color": "red", "value": 120 }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": ["lastNotNull"],
-          "fields": ""
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "wideLayout": true,
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(zenith_data_sync_lag_seconds_bucket[5m])) by (le))",
           "legendFormat": "",
           "instant": true,
           "range": false
@@ -220,7 +235,12 @@
     {
       "type": "row",
       "title": "Webhook Volume",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
       "id": 6,
       "collapsed": false,
       "panels": []
@@ -229,8 +249,16 @@
       "type": "timeseries",
       "title": "Webhooks by Provider & Type",
       "id": 7,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
@@ -269,7 +297,10 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null }
+              {
+                "color": "green",
+                "value": null
+              }
             ]
           },
           "mappings": []
@@ -285,13 +316,18 @@
           "displayMode": "list",
           "placement": "bottom",
           "showValues": "current",
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         }
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
           "expr": "sum(rate(zenith_webhooks_received_total[5m])) by (provider, type)",
           "legendFormat": "{{provider}} - {{type}}",
           "instant": false,
@@ -303,8 +339,16 @@
       "type": "timeseries",
       "title": "Webhook Success vs Failure",
       "id": 8,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
@@ -343,27 +387,42 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null }
+              {
+                "color": "green",
+                "value": null
+              }
             ]
           },
           "mappings": []
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "failed" },
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
             "properties": [
               {
                 "id": "color",
-                "value": { "fixedColor": "red", "mode": "fixed" }
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
               }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "success" },
+            "matcher": {
+              "id": "byName",
+              "options": "success"
+            },
             "properties": [
               {
                 "id": "color",
-                "value": { "fixedColor": "green", "mode": "fixed" }
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
               }
             ]
           }
@@ -378,13 +437,18 @@
           "displayMode": "list",
           "placement": "bottom",
           "showValues": "current",
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         }
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
           "expr": "sum(rate(zenith_webhooks_received_total[5m])) by (status)",
           "legendFormat": "{{status}}",
           "instant": false,
@@ -395,7 +459,12 @@
     {
       "type": "row",
       "title": "Processing",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
       "id": 9,
       "collapsed": false,
       "panels": []
@@ -404,8 +473,16 @@
       "type": "timeseries",
       "title": "Processing Duration by Provider/Type (p95)",
       "id": 10,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "s",
@@ -444,411 +521,15 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showValues": "current",
-          "calcs": ["lastNotNull"]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(zenith_webhook_processing_duration_seconds_bucket[5m])) by (le, provider, type))",
-          "legendFormat": "{{provider}} - {{type}}",
-          "instant": false,
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Data Sync Lag by Provider",
-      "id": 11,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "barAlignment": 0,
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "insertNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showValues": "current",
-          "calcs": ["lastNotNull"]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "histogram_quantile(0.50, sum(rate(zenith_data_sync_lag_seconds_bucket[5m])) by (le, provider))",
-          "legendFormat": "{{provider}} p50",
-          "instant": false,
-          "range": true
-        },
-        {
-          "refId": "B",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(zenith_data_sync_lag_seconds_bucket[5m])) by (le, provider))",
-          "legendFormat": "{{provider}} p95",
-          "instant": false,
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "row",
-      "title": "Provider Health",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
-      "id": 12,
-      "collapsed": false,
-      "panels": []
-    },
-    {
-      "type": "timeseries",
-      "title": "External API Latency (p95)",
-      "id": 13,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "barAlignment": 0,
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "insertNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showValues": "current",
-          "calcs": ["lastNotNull"]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(zenith_external_api_latency_seconds_bucket[5m])) by (le, provider))",
-          "legendFormat": "{{provider}}",
-          "instant": false,
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "External API Errors",
-      "id": 14,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "barAlignment": 0,
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "insertNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showValues": "current",
-          "calcs": ["lastNotNull"]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "sum(rate(zenith_external_api_errors_total[5m])) by (provider, error_type)",
-          "legendFormat": "{{provider}} - {{error_type}}",
-          "instant": false,
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Strava Rate Limit Remaining",
-      "id": 15,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "barAlignment": 0,
-            "lineWidth": 2,
-            "fillOpacity": 20,
-            "gradientMode": "scheme",
-            "spanNulls": false,
-            "insertNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "thresholdsStyle": {
-              "mode": "area"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 100 },
-              { "color": "green", "value": 500 }
-            ]
-          },
-          "mappings": [],
-          "min": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showValues": "current",
-          "calcs": ["lastNotNull"]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "zenith_strava_rate_limit_remaining",
-          "legendFormat": "{{window}}",
-          "instant": false,
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Token Refresh",
-      "id": 16,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
-      "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "barAlignment": 0,
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "insertNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "",
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": [
-          {
-            "matcher": { "id": "byRegexp", "options": ".*failure.*" },
-            "properties": [
               {
-                "id": "color",
-                "value": { "fixedColor": "red", "mode": "fixed" }
+                "color": "green",
+                "value": null
               }
             ]
-          }
-        ]
+          },
+          "mappings": []
+        },
+        "overrides": []
       },
       "options": {
         "tooltip": {
@@ -859,15 +540,20 @@
           "displayMode": "list",
           "placement": "bottom",
           "showValues": "current",
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         }
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "grafana_prometheus" },
-          "expr": "sum(rate(zenith_token_refresh_total[5m])) by (provider, result)",
-          "legendFormat": "{{provider}} - {{result}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum(rate(zenith_webhook_processing_duration_seconds_bucket[5m])) by (le, provider, type))",
+          "legendFormat": "{{provider}} - {{type}}",
           "instant": false,
           "range": true
         }
