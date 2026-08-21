@@ -160,10 +160,11 @@ groups:
           description: "A high percentage of Celery tasks are failing. Check worker logs and task error details."
 
 
-      # Scrape Target Down (any Prometheus target unreachable for 5 min)
+      # Scrape Target Down. Counts down targets; `or vector(0)` guarantees a value
+      # when all are healthy, so noDataState only triggers if the metric vanishes.
       - uid: scrape-target-down
         title: Scrape Target Down
-        condition: A
+        condition: B
         noDataState: Alerting
         execErrState: Alerting
         data:
@@ -173,20 +174,32 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: up == 0
+              expr: count(up == 0) or vector(0)
               instant: false
               range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
         for: 5m
         labels:
           severity: critical
         annotations:
-          summary: "Prometheus target {{ $labels.job }} is down"
-          description: "{{ $labels.instance }} has not responded to scrapes for 5 minutes. Metrics from this service are missing."
+          summary: "One or more Prometheus targets are down"
+          description: "At least one scrape target has not responded for 5 minutes. Check the Service Health dashboard to see which job. Metrics from that service are missing."
 
-      # Redis Unreachable (exporter is up but cannot reach Redis)
+      # Redis Unreachable: exporter is up but cannot reach Redis (auth or host failure).
       - uid: redis-unreachable
         title: Redis Unreachable
-        condition: A
+        condition: B
         noDataState: Alerting
         execErrState: Alerting
         data:
@@ -196,20 +209,32 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: redis_up == 0
+              expr: min(redis_up) or vector(0)
               instant: false
               range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
         for: 5m
         labels:
           severity: critical
         annotations:
           summary: "Redis is unreachable"
-          description: "redis_exporter is running but cannot connect to Redis. Garmin backfill rate-limit state and the notification mute switch are unavailable."
+          description: "redis_exporter is running but cannot connect to Redis. Garmin backfill rate-limit state and the notification global mute switch are unavailable."
 
-      # No Celery Workers Online
+      # Celery worker liveness. Worker death was completely silent during 2026-08-18.
       - uid: no-celery-workers
         title: No Celery Workers Online
-        condition: A
+        condition: B
         noDataState: Alerting
         execErrState: Alerting
         data:
@@ -219,15 +244,27 @@ groups:
               to: 0
             datasourceUid: grafana_prometheus
             model:
-              expr: count(flower_worker_online == 1) < 2
+              expr: count(flower_worker_online == 1) or vector(0)
               instant: false
               range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [2]
         for: 5m
         labels:
           severity: critical
         annotations:
           summary: "Fewer than 2 Celery workers online"
-          description: "Worker death was completely silent during the 2026-08-18 outage. Check the Celery Main service in Railway."
+          description: "Celery worker count has dropped below 2. Check the Celery Main service in Railway and the Celery Workers dashboard."
 
       # Webhook Processing Failures (>5% failure rate for 5 min)
       - uid: webhook-failures
