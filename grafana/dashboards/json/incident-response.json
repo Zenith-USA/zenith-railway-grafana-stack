@@ -1,0 +1,812 @@
+{
+  "uid": "incident-response",
+  "title": "Incident Response",
+  "description": "Answers 'is ingestion healthy right now' without SQL against production. Built for the 2026-08-18 postmortem (ZEN-484).",
+  "tags": [
+    "incident",
+    "ingestion",
+    "oncall"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Oldest Unprocessed",
+      "description": "Closest proxy for data missing from the app.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 900
+              },
+              {
+                "color": "red",
+                "value": 1800
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "max(zenith_webhooks_unprocessed_oldest_seconds)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Unprocessed Webhooks",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum(zenith_webhooks_unprocessed{state=\"pending\"})"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Workers Online",
+      "description": "== 1 filter is required; Flower retains dead workers indefinitely.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "count(flower_worker_online == 1)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Queue Depth",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum(rabbitmq_queue_messages_ready{queue!~\"celeryev.*|.*pidbox\"})"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Beat Last Tick",
+      "description": "Absent when beat is dead. 17 jobs stop with it.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 300
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "time() - max(zenith_beat_last_heartbeat_timestamp)"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Watchdog Last Run",
+      "description": "Runs every 10 min. Dispatched-but-not-executed hid the 08-18 outage.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1800
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "time() - max(zenith_scheduled_task_last_success{task=\"reset_stuck_processing_rows\"})"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Unacked Messages",
+      "description": "A delivery held past 1800s kills the worker.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum(rabbitmq_queue_messages_unacked{queue!~\"celeryev.*|.*pidbox\"})"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "DB Connections",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 48
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum(zenith_db_connections{state=\"active\"})"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Arrival vs Processing Rate",
+      "description": "Arrival outpacing processing is the leading indicator of a backlog.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum(rate(zenith_webhooks_received_total[5m]))",
+          "legendFormat": "received/s"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum(rate(flower_events_total{type=\"task-succeeded\"}[5m]))",
+          "legendFormat": "tasks succeeded/s"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Unprocessed Backlog",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum by (state) (zenith_webhooks_unprocessed)",
+          "legendFormat": "{{state}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Queue Depth by Queue",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum by (queue) (rabbitmq_queue_messages_ready{queue!~\"celeryev.*|.*pidbox\"})",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Consumers by Queue",
+      "description": "Zero consumers with messages queued means work accumulates silently.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum by (queue) (rabbitmq_queue_consumers{queue!~\"celeryev.*|.*pidbox\"})",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Task Failures and Retries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum(rate(flower_events_total{type=\"task-failed\"}[5m]))",
+          "legendFormat": "failed/s"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum(rate(flower_events_total{type=\"task-retried\"}[5m]))",
+          "legendFormat": "retried/s"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Task Runtime p95 vs Broker Timeout",
+      "description": "RabbitMQ consumer_timeout is 1800s. Crossing it kills the worker.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum(rate(flower_task_runtime_seconds_bucket[15m])) by (le, task))",
+          "legendFormat": "{{task}}"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Raw Rows by State",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum by (status) (zenith_raw_rows_by_state)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Raw Rows Failed by Table",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "sum by (table) (zenith_raw_rows_by_state{status=\"failed\"})",
+          "legendFormat": "{{table}}"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "logs",
+      "title": "Recent Ingestion Errors",
+      "datasource": {
+        "type": "loki",
+        "uid": "grafana_lokiq"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "grafana_lokiq"
+          },
+          "expr": "{platform=~\"worker|api\", level=~\"ERROR|CRITICAL\"} |~ \"ingest|webhook|pipeline|watchdog\""
+        }
+      ]
+    }
+  ]
+}

@@ -787,3 +787,148 @@ groups:
         annotations:
           summary: "Celery tasks retrying at over 0.5/sec"
           description: "Sustained retries usually mean a permanent failure classified as transient. Check which task via flower_events_total by task label."
+
+      # Beat Scheduler Dead — 17 periodic jobs stop with no other signal.
+      # Absence is the alert: the metric is only present while beat is ticking.
+      - uid: beat-scheduler-dead
+        title: Celery Beat Scheduler Dead
+        condition: B
+        noDataState: Alerting
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: time() - max(zenith_beat_last_heartbeat_timestamp)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [300]
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Celery beat has not ticked in over 5 minutes"
+          description: "Every periodic job stops when beat dies, including the ingestion watchdog. Nothing else signals this."
+
+      # Watchdog Not Executing — the 2026-08-18 blind spot. Beat dispatched it
+      # 12 times and the worker ran it 0 times, across two log streams nobody
+      # was correlating.
+      - uid: watchdog-not-executing
+        title: Ingestion Watchdog Not Executing
+        condition: B
+        noDataState: Alerting
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: time() - max(zenith_scheduled_task_last_success{task="reset_stuck_processing_rows"})
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [1800]
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Ingestion watchdog has not completed in over 30 minutes"
+          description: "It runs every 10 minutes. Dispatched-but-never-executed is the exact state that hid the 08-18 outage: the recovery job was queued behind the backlog it exists to clear."
+
+      # Task Runtime Approaching Broker Timeout — early warning for ZEN-478.
+      # RabbitMQ consumer_timeout is 1800s; alert at half.
+      - uid: task-runtime-near-broker-timeout
+        title: Task Runtime Approaching Broker Timeout
+        condition: B
+        noDataState: NoData
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 1800
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: max(histogram_quantile(0.95, sum(rate(flower_task_runtime_seconds_bucket[15m])) by (le, task))) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [900]
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "A task's p95 runtime exceeds half the broker ack timeout"
+          description: "At 1800s RabbitMQ force-closes the channel and the worker dies, taking every queue it serves with it. That is how the 08-18 outage started."
+
+      # Unprocessed Backlog Growing — arrival outpacing processing, before the
+      # absolute age threshold trips.
+      - uid: unprocessed-backlog-growing
+        title: Unprocessed Webhook Backlog Growing
+        condition: B
+        noDataState: NoData
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 1800
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(zenith_webhooks_unprocessed{state="pending"}) - sum(min_over_time(zenith_webhooks_unprocessed{state="pending"}[20m]))
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [50]
+        for: 20m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unprocessed webhooks climbing steadily"
+          description: "Webhooks are arriving faster than they drain. Catches a slow leak before the oldest-unprocessed age alert trips."
