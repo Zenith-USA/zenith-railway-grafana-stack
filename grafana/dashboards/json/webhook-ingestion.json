@@ -1,14 +1,13 @@
 {
   "uid": null,
   "title": "Webhook Ingestion",
-  "description": "Webhook ingestion from Garmin and Strava. Panels for external-API latency, Strava rate limits, and sync lag were removed when the pushgateway was retired (see ZEN-483).",
+  "description": "Garmin webhook ingestion. External-API latency and sync-lag panels were removed when the pushgateway was retired (see ZEN-483).",
   "editable": false,
   "schemaVersion": 39,
   "tags": [
     "webhooks",
     "ingestion",
-    "garmin",
-    "strava"
+    "garmin"
   ],
   "timezone": "browser",
   "refresh": "15s",

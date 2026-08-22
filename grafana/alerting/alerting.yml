@@ -574,3 +574,216 @@ groups:
         annotations:
           summary: "Push notification failure rate exceeds 30%"
           description: "A high percentage of push notifications are failing to deliver. Check APNs configuration and device token validity."
+
+      # Ingestion Stalled — oldest unprocessed webhook older than 30 min.
+      # The number that maps most directly to data missing from the app.
+      - uid: ingestion-stalled
+        title: Ingestion Stalled
+        condition: B
+        noDataState: NoData
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: max(zenith_webhooks_unprocessed_oldest_seconds) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [1800]
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Oldest unprocessed webhook is over 30 minutes old"
+          description: "Webhooks are persisting but not processing. Check worker liveness and the ingestion queue before assuming the broker is fine."
+
+      # Messages Unacked — the 2026-08-18 failure mode. A task holding a
+      # delivery past RabbitMQ's 1800s consumer_timeout gets its channel killed.
+      - uid: rabbitmq-unacked-buildup
+        title: RabbitMQ Unacked Messages Building
+        condition: B
+        noDataState: NoData
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(rabbitmq_queue_messages_unacked{queue!~"celeryev.*|.*pidbox"}) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [50]
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unacked messages sustained above 50"
+          description: "Tasks are holding deliveries without acking. If one exceeds the broker consumer_timeout the channel is force-closed and the worker dies."
+
+      # Queue With No Consumers — messages arriving with nothing subscribed.
+      - uid: queue-no-consumers
+        title: Queue Has No Consumers
+        condition: B
+        noDataState: NoData
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: min(rabbitmq_queue_consumers{queue=~"ingestion|orchestration|community|daily|analytics"}) or vector(1)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "A work queue has zero consumers"
+          description: "Messages are being published to a queue nothing is subscribed to. Work accumulates silently until a worker reconnects."
+
+      # Broker Flow Control — memory or disk alarm stalls all publishers.
+      - uid: rabbitmq-alarm-active
+        title: RabbitMQ Resource Alarm Active
+        condition: B
+        noDataState: NoData
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: max(rabbitmq_alarms_memory_used_watermark or rabbitmq_alarms_free_disk_space_watermark) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RabbitMQ memory or disk alarm is active"
+          description: "The broker has entered flow control and is blocking publishers. Webhook ingestion stops until the alarm clears."
+
+      # Raw Rows Stuck — rows persisted but never processed to completion.
+      - uid: raw-rows-stuck
+        title: Raw Rows Stuck in Processing
+        condition: B
+        noDataState: NoData
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 1800
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: sum(zenith_raw_rows_by_state{status=~"pending|processing"}) or vector(0)
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [200]
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Over 200 raw rows sustained in non-terminal state"
+          description: "Rows are landing but not completing. The watchdog re-dispatches stale ones; a sustained climb means processing is failing faster than recovery."
+
+      # Task Retry Spike — a task failing repeatedly, often a permanent error
+      # being retried as if transient.
+      - uid: celery-retry-spike
+        title: Celery Task Retry Spike
+        condition: B
+        noDataState: NoData
+        execErrState: OK
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: grafana_prometheus
+            model:
+              expr: last_over_time((sum(rate(flower_events_total{type="task-retried"}[15m])) or vector(0))[5m:])
+              instant: false
+              range: true
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0.5]
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Celery tasks retrying at over 0.5/sec"
+          description: "Sustained retries usually mean a permanent failure classified as transient. Check which task via flower_events_total by task label."

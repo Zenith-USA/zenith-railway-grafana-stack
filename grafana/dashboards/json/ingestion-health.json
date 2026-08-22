@@ -395,7 +395,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (provider) (zenith_webhooks_unprocessed)",
+          "expr": "sum by (state) (zenith_webhooks_unprocessed)",
           "legendFormat": "{{provider}}"
         }
       ],

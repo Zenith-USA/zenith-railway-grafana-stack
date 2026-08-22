@@ -1039,6 +1039,106 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Broker Resource Alarms",
+      "description": "Memory or disk alarm puts RabbitMQ into flow control and blocks all publishers. 1 = active.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2
+          },
+          "max": 1,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "rabbitmq_alarms_memory_used_watermark",
+          "legendFormat": "memory watermark"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "rabbitmq_alarms_free_disk_space_watermark",
+          "legendFormat": "disk watermark"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Task Runtime vs Broker Ack Timeout",
+      "description": "p95 runtime per task against RabbitMQ consumer_timeout (1800s). A task approaching the line gets its channel force-closed and kills the worker \u2014 the 2026-08-18 failure.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafana_prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 300
+              },
+              {
+                "color": "red",
+                "value": 1800
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafana_prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum(rate(flower_task_runtime_seconds_bucket[15m])) by (le, task))",
+          "legendFormat": "{{task}}"
+        }
+      ]
     }
   ]
 }
